@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>素因数分解ゲーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #333132; /* Darker background */
+            color: #f3f4f6; /* Lighter text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .game-container {
+            background-color: #1f2937; /* Even darker container */
+            padding: 3rem;
+            border-radius: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid #374151;
+        }
+        .btn-prime {
+            width: 100%;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            font-size: 1.75rem;
+            font-weight: bold;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            background-color: #4f46e5;
+            color: white;
+        }
+        .btn-prime:hover {
+            transform: translateY(-3px);
+            background-color: #6366f1;
+        }
+        .btn-action {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+        }
+        .btn-action:hover {
+            transform: translateY(-2px);
+        }
+        .current-number {
+            font-size: 5rem;
+            font-weight: 800; /* Extra bold */
+            min-height: 6rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="game-container rounded-3xl p-6 md:p-10 shadow-xl border border-gray-700">
+        <div class="flex justify-between items-center mb-10 text-xl font-bold">
+            <div id="scoreDisplay" class="text-green-400">SCORE: 0</div>
+            <div id="timerDisplay" class="text-red-400">TIME: 60.0</div>
+        </div>
+
+        <div class="mb-10">
+            <div class="current-number text-gray-50" id="currentNumber"></div>
+            <div class="flex justify-center items-center mt-4 h-12">
+                <div class="text-3xl font-mono text-blue-400" id="playerInput"></div>
+            </div>
+        </div>
+
+        <div id="primeButtons" class="grid grid-cols-3 gap-4 mb-6">
+            <!-- 素因数ボタンはJSで生成 -->
+        </div>
+
+        <div id="actionButtons" class="flex justify-center gap-4 items-center">
+            <button id="checkButton" class="btn-action bg-blue-600 text-white text-3xl py-4 px-8 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform" disabled>✔</button>
+            <button id="backspaceButton" class="btn-action bg-gray-700 text-white py-3 px-6 rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 transition-transform" disabled><i class="fas fa-backspace"></i></button>
+            <button id="startButton" class="btn-action bg-green-600 text-white py-3 px-6 rounded-full hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-transform">START</button>
+            <button id="restartButton" class="btn-action bg-red-600 text-white py-3 px-6 rounded-full hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-transform" style="display: none;">RESTART</button>
+        </div>
+
+        <div id="results" class="mt-8 text-center" style="display: none;">
+            <h2 class="text-3xl font-bold mb-4 text-gray-100">FINAL SCORE</h2>
+            <div class="text-xl md:text-2xl font-semibold text-gray-300"><span id="finalScore">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timer = 60;
+        let timerInterval;
+        let currentProblem;
+        let currentPlayerInput = [];
+        let primeOptions = [2, 3, 5, 7, 11, 13];
+        let gameActive = false;
+        let questionList;
+        let currentNumber;
+        
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const currentNumberDisplay = document.getElementById('currentNumber');
+        const playerInputDisplay = document.getElementById('playerInput');
+        const primeButtonsContainer = document.getElementById('primeButtons');
+        const checkButton = document.getElementById('checkButton');
+        const backspaceButton = document.getElementById('backspaceButton');
+        const startButton = document.getElementById('startButton');
+        const restartButton = document.getElementById('restartButton');
+        const resultsContainer = document.getElementById('results');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        
+        // 問題リストを生成
+        function generateQuestionList() {
+            const list = new Set();
+            while (list.size < 50) {
+                let num = 1;
+                const factors = [];
+                for (let i = 0; i < Math.floor(Math.random() * 4) + 1; i++) {
+                    const randomPrime = primeOptions[Math.floor(Math.random() * primeOptions.length)];
+                    num *= randomPrime;
+                    factors.push(randomPrime);
+                }
+                if (num > 1 && num <= 9999) {
+                    factors.sort((a, b) => a - b);
+                    list.add(JSON.stringify({ number: num, factors: factors }));
+                }
+            }
+            return Array.from(list).map(item => JSON.parse(item));
+        }
+
+        // ゲーム開始
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            timer = 60;
+            currentPlayerInput = [];
+            scoreDisplay.textContent = 'スコア: 0';
+            timerDisplay.textContent = '時間: 60.0';
+            currentNumberDisplay.textContent = '';
+            playerInputDisplay.textContent = '';
+            resultsContainer.style.display = 'none';
+            checkButton.disabled = false;
+            backspaceButton.disabled = false;
+            startButton.style.display = 'none';
+            restartButton.style.display = 'none';
+
+            questionList = generateQuestionList();
+            
+            // 素因数ボタンを生成
+            primeButtonsContainer.innerHTML = '';
+            // 上段に3つ
+            for (let i = 0; i < 3; i++) {
+                const prime = primeOptions[i];
+                const button = document.createElement('button');
+                button.textContent = prime;
+                button.className = 'btn-prime bg-purple-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-transform';
+                button.addEventListener('click', () => {
+                    if (gameActive) {
+                        currentPlayerInput.push(prime);
+                        updateInputDisplay();
+                    }
+                });
+                primeButtonsContainer.appendChild(button);
+            }
+            // 下段に3つ
+            for (let i = 3; i < 6; i++) {
+                const prime = primeOptions[i];
+                const button = document.createElement('button');
+                button.textContent = prime;
+                button.className = 'btn-prime bg-purple-600 text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-transform';
+                button.addEventListener('click', () => {
+                    if (gameActive) {
+                        currentPlayerInput.push(prime);
+                        updateInputDisplay();
+                    }
+                });
+                primeButtonsContainer.appendChild(button);
+            }
+
+            startTimer();
+            nextProblem();
+        }
+
+        // タイマー開始
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timer > 0) {
+                    timer -= 0.1;
+                    timerDisplay.textContent = `時間: ${timer.toFixed(1)}`;
+                } else {
+                    endGame();
+                }
+            }, 100);
+        }
+
+        // タイマー停止
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        // 次の問題を出す
+        function nextProblem() {
+            if (questionList.length === 0) {
+                endGame();
+                return;
+            }
+            const randomIndex = Math.floor(Math.random() * questionList.length);
+            currentProblem = questionList.splice(randomIndex, 1)[0];
+            currentNumber = currentProblem.number;
+            
+            currentNumberDisplay.textContent = currentProblem.number;
+            currentPlayerInput = [];
+            updateInputDisplay();
+        }
+
+        // 入力表示を更新
+        function updateInputDisplay() {
+            playerInputDisplay.textContent = currentPlayerInput.join(' × ');
+        }
+
+        // チェックボタンの処理
+        checkButton.addEventListener('click', () => {
+            if (!gameActive || currentPlayerInput.length === 0) return;
+            stopTimer();
+
+            let tempNumber = currentNumber;
+            let correctFactors = [];
+            
+            for (let factor of currentPlayerInput) {
+                if (tempNumber % factor === 0) {
+                    tempNumber /= factor;
+                    correctFactors.push(factor);
+                } else {
+                    break;
+                }
+            }
+            
+            let isPerfectlyCorrect = false;
+            if (correctFactors.length === currentPlayerInput.length && tempNumber === 1) {
+                isPerfectlyCorrect = true;
+            }
+
+            // 素因数分解の過程をアニメーション表示
+            animateFactorization([currentNumber].concat(correctFactors.map((_, i) => {
+                let val = currentNumber;
+                for(let j = 0; j <= i; j++) {
+                    val /= correctFactors[j];
+                }
+                return val;
+            }))).then(() => {
+                let scoreChange = 0;
+                let timeChange = 0;
+                
+                if (isPerfectlyCorrect) { // 完全に正解
+                    score += correctFactors.reduce((sum, val) => sum + val, 0);
+                    score += currentProblem.factors.length * 10;
+                    timeChange += currentProblem.factors.length * 0.2;
+                    nextProblem();
+                } else if (correctFactors.length > 0) { // 部分的に正解
+                    score += correctFactors.reduce((sum, val) => sum + val, 0);
+                    currentNumber = tempNumber;
+                } else { // 全て間違い
+                    if (score > 5) score -= 5;
+                    timeChange -= 1;
+                }
+
+                currentPlayerInput = [];
+                updateInputDisplay();
+                timer += timeChange;
+                if (timer < 0) timer = 0;
+                scoreDisplay.textContent = `スコア: ${score}`;
+                timerDisplay.textContent = `時間: ${timer.toFixed(1)}`;
+                startTimer();
+            });
+        });
+        
+        // 素因数分解の過程を切り替え表示
+        function animateFactorization(numbers) {
+            return new Promise(resolve => {
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < numbers.length) {
+                        currentNumberDisplay.textContent = numbers[index];
+                        index++;
+                    } else {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 250);
+            });
+        }
+
+        // 戻るボタンの処理
+        backspaceButton.addEventListener('click', () => {
+            if (gameActive && currentPlayerInput.length > 0) {
+                currentPlayerInput.pop();
+                updateInputDisplay();
+            }
+        });
+
+        // スタートボタンの処理
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+
+        // ゲーム終了
+        function endGame() {
+            stopTimer();
+            gameActive = false;
+            currentNumberDisplay.textContent = 'ゲーム終了！';
+            playerInputDisplay.textContent = '';
+            checkButton.disabled = true;
+            backspaceButton.disabled = true;
+            restartButton.style.display = 'inline-block';
+
+            resultsContainer.style.display = 'block';
+            finalScoreDisplay.textContent = score;
+        }
+    </script>
+</body>
+</html>
