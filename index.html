@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #2d2d2d;
+            background-color: #000000; /* 背景を黒 */
             color: #f9fafb;
             margin: 0;
             width: 100vw;
@@ -22,10 +22,7 @@
             touch-action: manipulation;
         }
         .game-container {
-            background-color: #1f2937;
-            padding: 2rem;
-            border-radius: 0;
-            box-shadow: none;
+            background-color: #000000;
             width: 100%;
             height: 100%;
             display: flex;
@@ -34,30 +31,18 @@
             align-items: center;
             text-align: center;
         }
-        .btn-prime {
-            width: 100%;
-            padding: 1rem 0;
-            font-size: 1.5rem;
-            font-weight: bold;
-            border-radius: 0.75rem;
-            transition: all 0.2s;
-            background-color: #000000;
-            color: #ffffff;
-        }
-        .btn-prime:hover {
-            transform: translateY(-3px);
-            background-color: #111111;
-        }
-        .btn-action {
-            padding: 0.75rem 1.5rem;
+        .btn-prime, .btn-action {
+            border-radius: 50%; /* 丸いボタン */
+            padding: 1rem;
             font-size: 1.25rem;
             font-weight: bold;
-            border-radius: 9999px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: all 0.2s;
+            background-color: #333333; /* 濃いグレー */
+            color: #ffffff;
         }
-        .btn-action:hover {
+        .btn-prime:hover, .btn-action:hover {
             transform: translateY(-2px);
+            background-color: #444444;
         }
         .current-number {
             font-size: 4rem;
@@ -66,8 +51,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #ffffff; /* 白に変更 */
-            transition: transform 0.3s ease, opacity 0.3s ease; /* アニメーション効果 */
+            color: #ffffff;
+            transition: transform 0.3s ease, opacity 0.3s ease;
         }
         .fade-out {
             opacity: 0;
@@ -77,15 +62,45 @@
             opacity: 1;
             transform: scale(1);
         }
+        #topMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 50;
+        }
+        #pauseButton {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        #statusBar {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 1rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="flex justify-between items-center mb-8 text-lg font-bold w-full px-4">
-            <div id="scoreDisplay" class="text-green-400">SCORE: 0</div>
-            <div id="timerDisplay" class="text-red-400">TIME: 60.0</div>
-        </div>
+    <div id="pauseButton">||</div>
+    <div id="statusBar">
+        <div id="scoreDisplay" class="text-green-400">SCORE: 0</div>
+        <div id="timerDisplay" class="text-red-400">TIME: 60.0</div>
+    </div>
 
+    <div class="game-container">
         <div class="mb-6">
             <div class="current-number" id="currentNumber"></div>
             <div class="flex justify-center items-center mt-3 h-10">
@@ -93,19 +108,23 @@
             </div>
         </div>
 
-        <div id="primeButtons" class="grid grid-cols-3 gap-3 mb-6 w-full max-w-md"></div>
+        <div id="primeButtons" class="grid grid-cols-4 gap-3 mb-6 w-full max-w-md"></div>
 
         <div id="actionButtons" class="flex justify-center gap-3 items-center">
-            <button id="backspaceButton" class="btn-action bg-black text-white py-2 px-5" disabled><i class="fas fa-backspace"></i></button>
-            <button id="checkButton" class="btn-action bg-orange-500 text-white text-2xl py-3 px-6" disabled>✔</button>
-            <button id="startButton" class="btn-action bg-green-600 text-white py-2 px-5">START</button>
-            <button id="restartButton" class="btn-action bg-red-600 text-white py-2 px-5" style="display: none;">RESTART</button>
+            <button id="startButton" class="btn-action">▶</button>
+            <button id="restartButton" class="btn-action" style="display: none;">⟳</button>
         </div>
 
         <div id="results" class="mt-6 text-center hidden">
             <h2 class="text-2xl font-bold mb-2 text-gray-100">FINAL SCORE</h2>
             <div class="text-lg md:text-xl font-semibold text-gray-300"><span id="finalScore">0</span></div>
         </div>
+    </div>
+
+    <div id="topMenu">
+        <h2 class="text-2xl mb-4">Pause</h2>
+        <button onclick="goTop()" class="btn-action mb-4">TOP</button>
+        <button onclick="resumeGame()" class="btn-action">RESTART再スタート</button>
     </div>
 
     <script>
@@ -124,12 +143,21 @@
         const currentNumberDisplay = document.getElementById('currentNumber');
         const playerInputDisplay = document.getElementById('playerInput');
         const primeButtonsContainer = document.getElementById('primeButtons');
-        const checkButton = document.getElementById('checkButton');
-        const backspaceButton = document.getElementById('backspaceButton');
+        const checkButton = document.createElement('button');
+        const backspaceButton = document.createElement('button');
+        checkButton.textContent = '✔';
+        backspaceButton.innerHTML = '<i class="fas fa-backspace"></i>';
+        checkButton.className = 'btn-action';
+        backspaceButton.className = 'btn-action';
+        checkButton.disabled = true;
+        backspaceButton.disabled = true;
+
         const startButton = document.getElementById('startButton');
         const restartButton = document.getElementById('restartButton');
         const resultsContainer = document.getElementById('results');
         const finalScoreDisplay = document.getElementById('finalScore');
+        const topMenu = document.getElementById('topMenu');
+        const pauseButton = document.getElementById('pauseButton');
 
         function generateQuestionList() {
             const list = new Set();
@@ -150,6 +178,7 @@
         }
 
         function startGame() {
+            stopTimer(); // タイマーをリセット
             gameActive = true;
             score = 0;
             timer = 60;
@@ -167,7 +196,7 @@
             questionList = generateQuestionList();
 
             primeButtonsContainer.innerHTML = '';
-            for (let prime of primeOptions) {
+            primeOptions.forEach((prime, index) => {
                 const button = document.createElement('button');
                 button.textContent = prime;
                 button.className = 'btn-prime';
@@ -178,16 +207,26 @@
                     }
                 });
                 primeButtonsContainer.appendChild(button);
-            }
+
+                // 3の右に取り消しボタン配置
+                if (prime === 3) {
+                    primeButtonsContainer.appendChild(backspaceButton);
+                }
+                // 13の右にチェックボタン配置
+                if (prime === 13) {
+                    primeButtonsContainer.appendChild(checkButton);
+                }
+            });
 
             startTimer();
             nextProblem();
         }
 
         function startTimer() {
+            stopTimer();
             timerInterval = setInterval(() => {
                 if (timer > 0) {
-                    timer -= 0.10;
+                    timer -= 0.05;
                     timerDisplay.textContent = `時間: ${timer.toFixed(1)}`;
                 } else {
                     endGame();
@@ -196,7 +235,9 @@
         }
 
         function stopTimer() {
-            clearInterval(timerInterval);
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
         }
 
         function nextProblem() {
@@ -208,7 +249,6 @@
             currentProblem = questionList.splice(randomIndex, 1)[0];
             currentNumber = currentProblem.number;
 
-            // 数字切替時にアニメーション
             currentNumberDisplay.classList.add('fade-out');
             setTimeout(() => {
                 currentNumberDisplay.textContent = currentProblem.number;
@@ -321,6 +361,24 @@
 
             resultsContainer.style.display = 'block';
             finalScoreDisplay.textContent = score;
+        }
+
+        // 一時停止処理
+        pauseButton.addEventListener('click', () => {
+            if (!gameActive) return;
+            stopTimer();
+            gameActive = false;
+            topMenu.style.display = 'flex';
+        });
+
+        function resumeGame() {
+            gameActive = true;
+            topMenu.style.display = 'none';
+            startTimer();
+        }
+
+        function goTop() {
+            location.reload();
         }
     </script>
 </body>
