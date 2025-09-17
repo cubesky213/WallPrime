@@ -32,17 +32,25 @@
             text-align: center;
         }
         .btn-prime, .btn-action {
-            border-radius: 50%; /* 丸いボタン */
-            padding: 1rem;
+            border-radius: 50%; /* 完全な円 */
+            width: 60px;
+            height: 60px;
             font-size: 1.25rem;
             font-weight: bold;
             transition: all 0.2s;
             background-color: #333333; /* 濃いグレー */
             color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .btn-prime:hover, .btn-action:hover {
             transform: translateY(-2px);
             background-color: #444444;
+        }
+        .btn-check {
+            background-color: orange !important; /* チェックボタンはオレンジ */
+            color: #fff;
         }
         .current-number {
             font-size: 4rem;
@@ -78,7 +86,7 @@
         }
         #pauseButton {
             position: absolute;
-            top: 1rem;
+            top: 3rem;
             left: 1rem;
             font-size: 2rem;
             cursor: pointer;
@@ -147,7 +155,7 @@
         const backspaceButton = document.createElement('button');
         checkButton.textContent = '✔';
         backspaceButton.innerHTML = '<i class="fas fa-backspace"></i>';
-        checkButton.className = 'btn-action';
+        checkButton.className = 'btn-action btn-check';
         backspaceButton.className = 'btn-action';
         checkButton.disabled = true;
         backspaceButton.disabled = true;
@@ -208,8 +216,8 @@
                 });
                 primeButtonsContainer.appendChild(button);
 
-                // 3の右に取り消しボタン配置
-                if (prime === 3) {
+                // 5の右に取り消しボタン配置
+                if (prime === 5) {
                     primeButtonsContainer.appendChild(backspaceButton);
                 }
                 // 13の右にチェックボタン配置
