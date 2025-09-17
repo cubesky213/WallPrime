@@ -44,9 +44,18 @@
             justify-content: center;
             align-items: center;
         }
-        .btn-prime:hover, .btn-action:hover {
+        .btn-action-wide {
+            border-radius: 9999px; /* 横長で丸み */
+            padding: 0.75rem 2rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            background-color: #2563eb; /* 青 */
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-action-wide:hover {
+            background-color: #1d4ed8;
             transform: translateY(-2px);
-            background-color: #444444;
         }
         .btn-check {
             background-color: orange !important;
@@ -110,17 +119,17 @@
 
     <div class="game-container">
         <div class="mb-6">
-            <div class="current-number" id="currentNumber"></div>
+            <div class="current-number" id="currentNumber">ベストスコア: <span id="bestScoreTop">0</span></div>
             <div class="flex justify-center items-center mt-3 h-10">
-                <div class="text-2xl font-mono text-blue-300" id="playerInput"></div>
+                <div class="text-base font-mono text-blue-300" id="playerInput"></div>
             </div>
         </div>
 
         <div id="primeButtons" class="grid grid-cols-4 gap-3 mb-6 w-full max-w-md"></div>
 
-        <div id="actionButtons" class="flex justify-center gap-3 items-center">
-            <button id="startButton" class="btn-action">START</button>
-            <button id="restartButton" class="btn-action" style="display: none;">RETRY</button>
+        <div id="actionButtons" class="flex flex-col gap-4 items-center">
+            <button id="startButton" class="btn-action-wide">START</button>
+            <button id="restartButton" class="btn-action-wide" style="display: none;">RETRY</button>
         </div>
 
         <div id="results" class="mt-6 text-center hidden">
@@ -132,8 +141,8 @@
 
     <div id="topMenu">
         <h2 class="text-2xl mb-4">Pause</h2>
-        <button onclick="goTop()" class="btn-action mb-4">TOP</button>
-        <button onclick="resumeGame()" class="btn-action">RESUME</button>
+        <button onclick="goTop()" class="btn-action-wide mb-4">TOP</button>
+        <button onclick="resumeGame()" class="btn-action-wide">RESUME</button>
     </div>
 
     <script>
@@ -167,10 +176,12 @@
         const resultsContainer = document.getElementById('results');
         const finalScoreDisplay = document.getElementById('finalScore');
         const bestScoreDisplay = document.getElementById('bestScore');
+        const bestScoreTop = document.getElementById('bestScoreTop');
         const topMenu = document.getElementById('topMenu');
         const pauseButton = document.getElementById('pauseButton');
 
         bestScoreDisplay.textContent = bestScore;
+        bestScoreTop.textContent = bestScore;
 
         function generateQuestionList() {
             const list = new Set();
@@ -238,7 +249,7 @@
             stopTimer();
             timerInterval = setInterval(() => {
                 if (timer > 0) {
-                    timer -= 0.10;
+                    timer -= 0.05;
                     timerDisplay.textContent = `時間: ${timer.toFixed(1)}`;
                 } else {
                     endGame();
@@ -383,7 +394,7 @@
             playerInputDisplay.textContent = '';
             checkButton.disabled = true;
             backspaceButton.disabled = true;
-            primeButtonsContainer.style.display = 'none'; // ボタン非表示
+            primeButtonsContainer.style.display = 'none';
             restartButton.style.display = 'inline-block';
 
             if (score > bestScore) {
@@ -394,6 +405,7 @@
             resultsContainer.style.display = 'block';
             finalScoreDisplay.textContent = score;
             bestScoreDisplay.textContent = bestScore;
+            bestScoreTop.textContent = bestScore;
         }
 
         pauseButton.addEventListener('click', () => {
@@ -410,7 +422,15 @@
         }
 
         function goTop() {
-            location.reload();
+            stopTimer();
+            gameActive = false;
+            currentNumberDisplay.textContent = 'ベストスコア: ' + bestScore;
+            playerInputDisplay.textContent = '';
+            primeButtonsContainer.style.display = 'none';
+            startButton.style.display = 'inline-block';
+            restartButton.style.display = 'none';
+            resultsContainer.style.display = 'none';
+            topMenu.style.display = 'none';
         }
     </script>
 </body>
