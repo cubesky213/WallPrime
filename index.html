@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #000000; /* 背景を黒 */
+            background-color: #000000;
             color: #f9fafb;
             margin: 0;
             width: 100vw;
@@ -32,13 +32,13 @@
             text-align: center;
         }
         .btn-prime, .btn-action {
-            border-radius: 50%; /* 完全な円 */
+            border-radius: 50%;
             width: 80px;
             height: 80px;
             font-size: 1.25rem;
             font-weight: bold;
             transition: all 0.2s;
-            background-color: #333333; /* 濃いグレー */
+            background-color: #333333;
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -49,7 +49,7 @@
             background-color: #444444;
         }
         .btn-check {
-            background-color: orange !important; /* チェックボタンはオレンジ */
+            background-color: orange !important;
             color: #fff;
         }
         .current-number {
@@ -86,7 +86,7 @@
         }
         #pauseButton {
             position: absolute;
-            top: 3rem;
+            top: 1rem;
             left: 1rem;
             font-size: 2rem;
             cursor: pointer;
@@ -104,8 +104,8 @@
 <body>
     <div id="pauseButton">||</div>
     <div id="statusBar">
-        <div id="scoreDisplay" class="text-green-400">SCORE: 0</div>
-        <div id="timerDisplay" class="text-red-400">TIME: 60.0</div>
+        <div id="scoreDisplay" class="text-green-400">スコア: 0</div>
+        <div id="timerDisplay" class="text-red-400">時間: 60.0</div>
     </div>
 
     <div class="game-container">
@@ -126,6 +126,7 @@
         <div id="results" class="mt-6 text-center hidden">
             <h2 class="text-2xl font-bold mb-2 text-gray-100">FINAL SCORE</h2>
             <div class="text-lg md:text-xl font-semibold text-gray-300"><span id="finalScore">0</span></div>
+            <h3 class="text-xl mt-4 text-yellow-400">BEST SCORE: <span id="bestScore">0</span></h3>
         </div>
     </div>
 
@@ -137,6 +138,7 @@
 
     <script>
         let score = 0;
+        let bestScore = localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0;
         let timer = 60;
         let timerInterval;
         let currentProblem;
@@ -164,8 +166,11 @@
         const restartButton = document.getElementById('restartButton');
         const resultsContainer = document.getElementById('results');
         const finalScoreDisplay = document.getElementById('finalScore');
+        const bestScoreDisplay = document.getElementById('bestScore');
         const topMenu = document.getElementById('topMenu');
         const pauseButton = document.getElementById('pauseButton');
+
+        bestScoreDisplay.textContent = bestScore;
 
         function generateQuestionList() {
             const list = new Set();
@@ -186,7 +191,7 @@
         }
 
         function startGame() {
-            stopTimer(); // タイマーをリセット
+            stopTimer();
             gameActive = true;
             score = 0;
             timer = 60;
@@ -200,6 +205,7 @@
             backspaceButton.disabled = false;
             startButton.style.display = 'none';
             restartButton.style.display = 'none';
+            primeButtonsContainer.style.display = 'grid';
 
             questionList = generateQuestionList();
 
@@ -216,11 +222,9 @@
                 });
                 primeButtonsContainer.appendChild(button);
 
-                // 5の右に取り消しボタン配置
                 if (prime === 5) {
                     primeButtonsContainer.appendChild(backspaceButton);
                 }
-                // 13の右にチェックボタン配置
                 if (prime === 13) {
                     primeButtonsContainer.appendChild(checkButton);
                 }
@@ -234,7 +238,7 @@
             stopTimer();
             timerInterval = setInterval(() => {
                 if (timer > 0) {
-                    timer -= 0.10;
+                    timer -= 0.05;
                     timerDisplay.textContent = `時間: ${timer.toFixed(1)}`;
                 } else {
                     endGame();
@@ -245,6 +249,7 @@
         function stopTimer() {
             if (timerInterval) {
                 clearInterval(timerInterval);
+                timerInterval = null;
             }
         }
 
@@ -275,13 +280,21 @@
 
         checkButton.addEventListener('click', () => {
             if (!gameActive) return;
+            if (checkButton.disabled) return;
+            if (currentPlayerInput.length === 0 && currentNumber !== 1) return;
+
+            checkButton.disabled = true;
+            backspaceButton.disabled = true;
 
             if (currentNumber === 1) {
                 nextProblem();
+                if (gameActive) {
+                    checkButton.disabled = false;
+                    backspaceButton.disabled = false;
+                }
                 return;
             }
 
-            if (currentPlayerInput.length === 0) return;
             stopTimer();
 
             let tempNumber = currentNumber;
@@ -329,7 +342,12 @@
                 if (timer < 0) timer = 0;
                 scoreDisplay.textContent = `スコア: ${score}`;
                 timerDisplay.textContent = `時間: ${timer.toFixed(1)}`;
+
                 startTimer();
+                if (gameActive) {
+                    checkButton.disabled = false;
+                    backspaceButton.disabled = false;
+                }
             });
         });
 
@@ -365,13 +383,19 @@
             playerInputDisplay.textContent = '';
             checkButton.disabled = true;
             backspaceButton.disabled = true;
+            primeButtonsContainer.style.display = 'none'; // ボタン非表示
             restartButton.style.display = 'inline-block';
+
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('bestScore', bestScore);
+            }
 
             resultsContainer.style.display = 'block';
             finalScoreDisplay.textContent = score;
+            bestScoreDisplay.textContent = bestScore;
         }
 
-        // 一時停止処理
         pauseButton.addEventListener('click', () => {
             if (!gameActive) return;
             stopTimer();
