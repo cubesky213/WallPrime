@@ -71,6 +71,12 @@
             color: #ffffff;
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
+        .best-score-top {
+            font-size: 1rem;
+            color: #facc15;
+            text-decoration: underline;
+            margin-top: 0.5rem;
+        }
         .fade-out {
             opacity: 0;
             transform: scale(0.8);
@@ -119,9 +125,10 @@
 
     <div class="game-container">
         <div class="mb-6">
-            <div class="current-number" id="currentNumber">ベストスコア: <span id="bestScoreTop">0</span></div>
+            <div class="current-number" id="currentNumber"></div>
+            <div id="bestScoreLabel" class="best-score-top">ベストスコア: <span id="bestScoreTop">0</span></div>
             <div class="flex justify-center items-center mt-3 h-10">
-                <div class="text-base font-mono text-blue-300" id="playerInput"></div>
+                <div class="text-2xl font-mono text-blue-300" id="playerInput"></div>
             </div>
         </div>
 
@@ -179,6 +186,7 @@
         const bestScoreTop = document.getElementById('bestScoreTop');
         const topMenu = document.getElementById('topMenu');
         const pauseButton = document.getElementById('pauseButton');
+        const bestScoreLabel = document.getElementById('bestScoreLabel');
 
         bestScoreDisplay.textContent = bestScore;
         bestScoreTop.textContent = bestScore;
@@ -193,7 +201,7 @@
                     num *= randomPrime;
                     factors.push(randomPrime);
                 }
-                if (num > 14 && num <= 9999) {
+                if (num > 1 && num <= 9999) {
                     factors.sort((a, b) => a - b);
                     list.add(JSON.stringify({ number: num, factors: factors }));
                 }
@@ -217,6 +225,7 @@
             startButton.style.display = 'none';
             restartButton.style.display = 'none';
             primeButtonsContainer.style.display = 'grid';
+            bestScoreLabel.style.display = 'none';
 
             questionList = generateQuestionList();
 
@@ -406,6 +415,7 @@
             finalScoreDisplay.textContent = score;
             bestScoreDisplay.textContent = bestScore;
             bestScoreTop.textContent = bestScore;
+            bestScoreLabel.style.display = 'block';
         }
 
         pauseButton.addEventListener('click', () => {
@@ -424,13 +434,14 @@
         function goTop() {
             stopTimer();
             gameActive = false;
-            currentNumberDisplay.textContent = 'ベストスコア: ' + bestScore;
+            currentNumberDisplay.textContent = '';
             playerInputDisplay.textContent = '';
             primeButtonsContainer.style.display = 'none';
             startButton.style.display = 'inline-block';
             restartButton.style.display = 'none';
             resultsContainer.style.display = 'none';
             topMenu.style.display = 'none';
+            bestScoreLabel.style.display = 'block';
         }
     </script>
 </body>
