@@ -201,7 +201,7 @@
                     num *= randomPrime;
                     factors.push(randomPrime);
                 }
-                if (num > 1 && num <= 9999) {
+                if (num > 10 && num <= 9999) {
                     factors.sort((a, b) => a - b);
                     list.add(JSON.stringify({ number: num, factors: factors }));
                 }
